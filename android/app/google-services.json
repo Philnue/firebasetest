@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "137311307266",
+    "firebase_url": "https://hirschboeoeg-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "hirschboeoeg",
+    "storage_bucket": "hirschboeoeg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:137311307266:android:fb1e4de6e018d51f9a091b",
+        "android_client_info": {
+          "package_name": "com.philnue.firebasetest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "137311307266-hg7iqgip3ejtjruk5tj2mv65tl3urf64.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbcj10Kz_Po7LAC8xZuU84q5Agtd31Xro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "137311307266-hg7iqgip3ejtjruk5tj2mv65tl3urf64.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "137311307266-daj1dcgtuo57hj68q0qdq5jaalnhb2vu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.firebasetest"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

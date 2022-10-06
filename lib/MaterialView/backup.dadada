@@ -1,0 +1,242 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebasetest/MaterialView/Views/AuthViews/login_email_password_screen.dart';
+import 'package:firebasetest/MaterialView/Views/AuthViews/login_screen.dart';
+import 'package:firebasetest/MaterialView/Views/AuthViews/signup_email_password_screen.dart';
+import 'package:firebasetest/MaterialView/Views/DrawerViews/aboutView.dart';
+import 'package:firebasetest/MaterialView/Views/DrawerViews/qRView.dart';
+import 'package:firebasetest/MaterialView/Views/addCalendarEntryView.dart';
+import 'package:firebasetest/MaterialView/Views/calendarView.dart';
+import 'package:firebasetest/MaterialView/Views/DrawerViews/settingsView.dart';
+import 'package:firebasetest/MaterialView/Views/editCalendarEntryViewNew.dart';
+import 'package:firebasetest/MaterialView/Views/mitgliedInfoView.dart';
+
+import 'package:firebasetest/MaterialView/Views/adminView.dart';
+import 'package:firebasetest/MaterialView/Views/pollView.dart';
+import 'package:firebasetest/MaterialView/home.dart';
+import 'package:firebasetest/utils/Api/mitglied.api.dart';
+import 'package:firebasetest/utils/Models/member.dart';
+import 'package:firebasetest/utils/firebaseUtils/database.dart';
+import 'package:firebasetest/utils/firebaseUtils/firebase_auth_methods.dart';
+import 'package:firebasetest/utils/providers/crrtUserNotifier.dart';
+import 'package:firebasetest/utils/shared/allCollections.dart';
+import 'package:firebasetest/utils/shared/constants.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:new_version/new_version.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+class MainPage extends ConsumerWidget {
+  //class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String helloWorld = ref.watch(helloWorldProvider);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const AuthWrapper(),
+      theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
+      routes: {
+        CalendarView.routeName: (context) => const CalendarView(),
+        PollView.routeName: ((context) => const PollView()),
+        SettingsView.routeName: ((context) => const SettingsView()),
+        QRView.routeName: ((context) => const QRView()),
+        AboutView.routeName: ((context) => const AboutView()),
+        MitgliedInfoView.routeName: ((context) => const MitgliedInfoView()),
+        AdminView.routeName: ((context) => const AdminView()),
+        EditCalendarEntryViewNew.routeName: ((context) =>
+            const EditCalendarEntryViewNew()),
+        AddCalendarEntryView.routeName: ((context) =>
+            const AddCalendarEntryView()),
+        EmailPasswordSignup.routeName: (context) => const EmailPasswordSignup(),
+        EmailPasswordLogin.routeName: (context) => const EmailPasswordLogin(),
+      },
+    );
+  }
+
+  // @override
+  // State<MainPage> createState() => _MainPageState();
+
+}
+
+final helloWorldProvider = Provider((_) => 'Hello world');
+
+class _MainPageState extends State<MainPage> {
+  @override
+  Widget build(BuildContext context) {
+    try {
+      //return
+      // MultiProvider(
+      //   providers: [
+      //     Provider<FirebaseAuthMethods>(
+      //       create: (_) => FirebaseAuthMethods(FirebaseAuth.instance),
+      //     ),
+      //     StreamProvider(
+      //       create: (context) => context.read<FirebaseAuthMethods>().authState,
+      //       initialData: null,
+      //     ),
+      //   ],
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const AuthWrapper(),
+        theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
+        routes: {
+          CalendarView.routeName: (context) => const CalendarView(),
+          PollView.routeName: ((context) => const PollView()),
+          SettingsView.routeName: ((context) => const SettingsView()),
+          QRView.routeName: ((context) => const QRView()),
+          AboutView.routeName: ((context) => const AboutView()),
+          MitgliedInfoView.routeName: ((context) => const MitgliedInfoView()),
+          AdminView.routeName: ((context) => const AdminView()),
+          EditCalendarEntryViewNew.routeName: ((context) =>
+              const EditCalendarEntryViewNew()),
+          AddCalendarEntryView.routeName: ((context) =>
+              const AddCalendarEntryView()),
+          EmailPasswordSignup.routeName: (context) =>
+              const EmailPasswordSignup(),
+          EmailPasswordLogin.routeName: (context) => const EmailPasswordLogin(),
+        },
+      );
+    } catch (_) {
+      Center(
+        child: Text("MaterialAppView ${_.toString()}"),
+      );
+      throw _.toString();
+    }
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    final newVersion = NewVersion(
+      iOSId: 'com.google.Vespa',
+      androidId: 'com.google.android.apps.cloudconsole',
+    );
+
+    // You can let the plugin handle fetching the status and showing a dialog,
+    // or you can fetch the status and display your own dialog, or no dialog.
+    const simpleBehavior = true;
+
+    // if (simpleBehavior == true) {
+    //   basicStatusCheck(newVersion);
+    // } else {
+    //   advancedStatusCheck(newVersion);
+    // }
+  }
+
+  // basicStatusCheck(NewVersion newVersion) {
+  //   //newVersion.showAlertIfNecessary(context: context);
+  // }
+
+  // advancedStatusCheck(NewVersion newVersion) async {
+  //   final status = await newVersion.getVersionStatus();
+  //   if (status != null) {
+  //     debugPrint(status.releaseNotes);
+  //     debugPrint(status.appStoreLink);
+  //     debugPrint(status.localVersion);
+  //     debugPrint(status.storeVersion);
+  //     debugPrint(status.canUpdate.toString());
+  //     newVersion.showUpdateDialog(
+  //       context: context,
+  //       versionStatus: status,
+  //       dialogTitle: 'Custom Title',
+  //       dialogText: 'Custom Text',
+  //     );
+  //   }
+  // }
+
+  void testInit(User te) async {
+    DatabaseService ds = DatabaseService(uid: te.uid);
+    //ds.testTermin();
+
+    Constants.currentUser = await ds.getCustomUserDataFromFireBase();
+
+    //CrrtUserNotifier val = CrrtUserNotifier(Constants.currentUser);
+    var _info = await PackageInfo.fromPlatform();
+
+    var lastLogin = te.metadata.lastSignInTime!;
+
+    await FirebaseFirestore.instance
+        .collection(AllCollections.users)
+        .doc(Constants.currentUser.uid)
+        .update({
+      "last_login": lastLogin,
+      "build_number": _info.buildNumber,
+    });
+
+    DeviceInfoPlugin devicePlugin = DeviceInfoPlugin();
+    String deviceId = "";
+    Map<String, dynamic> deviceData = {};
+    if (Platform.isAndroid) {
+      final deviceInfo = await devicePlugin.androidInfo;
+      deviceId = deviceInfo.id!;
+      deviceData = {
+        "os_version": deviceInfo.version.sdkInt.toString(),
+        "platform": 'android',
+        "model": deviceInfo.model,
+        "device": deviceInfo.device,
+      };
+    }
+    if (Platform.isIOS) {
+      final deviceInfo = await devicePlugin.iosInfo;
+      deviceId = deviceInfo.identifierForVendor!;
+      deviceData = {
+        "os_version": deviceInfo.systemVersion,
+        "device": deviceInfo.name,
+        "model": deviceInfo.utsname.machine,
+        "platform": 'ios',
+      };
+    }
+
+    final nowMS = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final deviceRef = FirebaseFirestore.instance
+        .collection(AllCollections.users)
+        .doc(te.uid)
+        .collection("devices")
+        .doc(deviceId);
+    if ((await deviceRef.get()).exists) {
+      await deviceRef.update({
+        "updated_at": nowMS,
+        "uninstalled": false,
+      });
+    } else {
+      await deviceRef.set({
+        "updated_at": nowMS,
+        "uninstalled": false,
+        "id": deviceId,
+        "created_at": nowMS,
+        "device_info": deviceData,
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // final firebaseUser = context.watch<User?>();
+
+    // if (firebaseUser != null) {
+    //   testInit(firebaseUser);
+    //   return const Home();
+    // }
+    return const LoginScreen();
+  }
+}

@@ -1,0 +1,4 @@
+#Tue Oct 04 16:56:32 CEST 2022
+base.0=/Users/philipp/development/projekte/firebasetest/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

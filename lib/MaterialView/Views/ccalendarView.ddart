@@ -1,0 +1,246 @@
+import 'package:firebasetest/MaterialView/Views/editCalendarEntryView.dart';
+import 'package:firebasetest/MaterialView/widgetUtils/customAppBar.dart';
+import 'package:firebasetest/MaterialView/widgetUtils/newDrawer.dart';
+
+import 'package:firebasetest/MaterialView/widgets/calendar/calendarItem.dart';
+
+import 'package:firebasetest/utils/Api/mitglied.api.dart';
+import 'package:firebasetest/utils/Api/termin.api.dart';
+import 'package:firebasetest/utils/Models/custom_user.dart';
+
+import 'package:firebasetest/utils/Models/termin.dart';
+import 'package:firebasetest/utils/providers/providers.dart';
+import 'package:firebasetest/utils/shared/constants.dart';
+import 'package:flutter/material.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final myReceivedDataProvider = FutureProvider<CustomUserData>((ref) async {
+  return MitgliedApi.getCurrentCustomUserDataFromFireBase();
+});
+
+final myTerminProvider = StreamProvider<List<Termin>>((ref) {
+  return TerminApi.loadTermineNew();
+});
+
+class CalendarView extends ConsumerWidget {
+  const CalendarView({Key? key}) : super(key: key);
+
+  static final routeName = "/calendarView";
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(myReceivedDataProvider);
+    final datatermine = ref.watch(myTerminProvider);
+    return data.when(
+      data: (data) {
+        return Text(data.getBirthdayAsString);
+      },
+      error: (error, stackTrace) {
+        return Text('$error, $stackTrace');
+      },
+      loading: () => CircularProgressIndicator(),
+    );
+  }
+}
+
+class _CalendarViewState extends State<CalendarView> {
+  int? _value = 0;
+
+  List<Termin> getFilteredList(List<Termin> unfilteredList) {
+    switch (_value) {
+      case 0:
+        return unfilteredList
+            .where(
+              (element) => element.zeitpunkt.isAfter(
+                DateTime.now().subtract(
+                  Duration(days: 1),
+                ),
+              ),
+            )
+            .toList();
+
+      case 1:
+        return unfilteredList
+            .where(
+              (element) =>
+                  element.ownEntscheidung == 1 &&
+                  element.zeitpunkt.isAfter(
+                    DateTime.now().subtract(
+                      Duration(days: 1),
+                    ),
+                  ),
+            )
+            .toList();
+      case 2:
+        return unfilteredList
+            .where(
+              (element) =>
+                  element.ownEntscheidung == 2 &&
+                  element.zeitpunkt.isAfter(
+                    DateTime.now().subtract(
+                      Duration(days: 1),
+                    ),
+                  ),
+            )
+            .toList();
+      case 3:
+        return unfilteredList
+            .where(
+              (element) =>
+                  element.ownEntscheidung == 0 &&
+                  element.zeitpunkt.isAfter(
+                    DateTime.now().subtract(
+                      Duration(days: 1),
+                    ),
+                  ),
+            )
+            .toList();
+
+      case 4:
+        return unfilteredList
+            .where(
+              (element) => element.zeitpunkt.isBefore(DateTime.now()),
+            )
+            .toList();
+
+      case 5:
+        return unfilteredList;
+    }
+
+    return [];
+  }
+
+  int currentListValue = 0;
+  Widget getTextMonth(List<String> setList, int index, String convValue) {
+    try {
+      String returnValue =
+          ""; //Hier noch das andere rein mit dem Arrow zum disablen
+
+      if (index == 0) {
+        returnValue = setList[0];
+        currentListValue = 0;
+      } else if (index != 0 && convValue != setList[currentListValue]) {
+        returnValue = convValue;
+        currentListValue += 1;
+      }
+
+      return returnValue != ""
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  returnValue,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(Icons.arrow_downward),
+              ],
+            )
+          : const Center();
+    } catch (_) {
+      throw "getMonth ${_.toString()}";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: CustomAppBar(text: "Kalender"),
+      floatingActionButton: Constants.currentUser.hasPermission("admin")
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamed(EditCalendarEntryView.routeName);
+              },
+              child: Icon(Icons.add),
+              enableFeedback: true,
+            )
+          : null,
+      drawer: NewDrawer(),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+          child: Column(children: [
+            Text(DateTime.now().toString()),
+            //Filter(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Wrap(
+                children: List<Widget>.generate(
+                  Constants.choiceChipsTexts.length,
+                  (int index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ChoiceChip(
+                        selectedColor: Colors.lightBlue,
+                        selectedShadowColor: Colors.amberAccent,
+                        label: Text(Constants.choiceChipsTexts[index]),
+                        selected: _value == index,
+                        onSelected: (bool selected) {
+                          setState(() {
+                            _value = selected ? index : null;
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ).toList(),
+              ),
+            ),
+
+            Expanded(
+              child: StreamBuilder<List<Termin>>(
+                  stream: TerminApi.loadTermineNew(),
+                  builder: (context, AsyncSnapshot<List<Termin>> allTermine) {
+                    if (allTermine.hasData && allTermine.data != null) {
+                      //var data = allTermine.data!;
+
+                      final list = getFilteredList(allTermine.data!);
+                      Set<String> _set = Set();
+
+                      list.forEach(
+                        (element) => _set.add(
+                            "${Constants.months[element.zeitpunkt.month - 1]}, ${element.zeitpunkt.year}"),
+                      );
+                      var m = _set.toList();
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          String dateVal =
+                              "${Constants.months[list[index].zeitpunkt.month - 1]}, ${list[index].zeitpunkt.year}";
+                          return Column(
+                            children: [
+                              getTextMonth(m, index, dateVal),
+                              _value == 5
+                                  ? ListTile(
+                                      title: Text(list[index].name),
+                                      trailing: Text(
+                                          list[index].datumConvertedInGerman),
+                                    )
+                                  : CalendarItem(
+                                      termin: list[index],
+                                    ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  }),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
